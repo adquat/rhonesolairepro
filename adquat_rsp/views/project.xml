@@ -5,9 +5,9 @@
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//group/group/span[@name='address_name']" position="before">
+            <field name="category_id" position="after">
                 <field name="date_birth_partner"/>
-            </xpath>
+            </field>
         </field>
     </record>
 
@@ -19,16 +19,17 @@
                   <field name="name" string="Projets"/>
                   <field name="partner_id"/>
                   <field name="gestion_surplus"/>
-                    <field name="amount_ht"/>
-                    <field name="amount_commission"/>
-                    <field name="date_signature"/>
-                    <field name="power_choose"/>
-                    <field name="commercial_name"/>
-                    <field name="date_vt"/>
-                    <field name="date_mairie"/>
-                    <field name="date_install"/>
-                    <field name="date_fdi"/>
-                    <field name="date_sav"/>
+                  <field name="power_choose"/>
+                  <field name="currency_id" invisible="1" />
+                  <field name="amount_ht" widget="monetary" options="{'currency_field': 'currency_id'}" sum="Total Montant (€)"/>
+                  <field name="amount_commission" widget="monetary" options="{'currency_field': 'currency_id'}"  sum="Total Commission (€)"/>
+                  <field name="user_id"/>
+                  <field name="date_signature"/>
+                  <field name="date_vt"/>
+                  <field name="date_mairie"/>
+                  <field name="date_install"/>
+                  <field name="date_fdi"/>
+                  <field name="date_sav"/>
               </tree>
           </field>
       </record>
@@ -76,14 +77,17 @@
                     1
                 </attribute>
             </xpath>
+            <field name="user_id" position="replace"/>
             <xpath expr="//group/group" position="inside">
                 <field name="gestion_surplus"/>
-                <field name="amount_ht"/>
-                <field name="amount_commission"/>
+                <field name="currency_id" invisible="1"/>
+                <field name="amount_ht" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                <field name="amount_commission" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                 <field name="power_choose"/>
-                <field name="commercial_name"/>
-                <field name="techs_name"/>
+                <field name="user_id"  widget="many2one_avatar_user"/>
+                <field name="tech_ids" widget="many2many_tags"/>
             </xpath>
+
             <xpath expr="//group/group" position="attributes">
                 <attribute name="name">
                     infos
@@ -105,7 +109,7 @@
             </xpath>
             <xpath expr="//notebook/page[@name='description']/field[@name='description']" position="after">
                 <group>
-                    <group>
+                    <group string="Informations client">
                         <field name="name_partner" string="Nom Client"/>
                         <field name="birth_partner"/>
                         <span class="o_form_label o_td_label" name="address_name">
@@ -119,20 +123,36 @@
                             <field name="zip" placeholder="Code Postal" class="o_address_zip"/>
                             <field name="country_id" placeholder="Pays" class="o_address_country" options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
                         </div>
+                        <field name="time"/>
+                        <field name="has_complete_partner_address" invisible="1"/>
+                        <label class="oe_read_only" for="has_complete_partner_address" invisible="1"/>
+                        <div>
+                            <button
+                                name="action_fsm_navigate" type="object" class="btn btn-link pl-0 pt-0 pb-2"
+                                icon="fa-arrow-right" string="Calcul itinéraire avec Google" colspan="2"
+                                attrs="{'invisible': [('has_complete_partner_address', '=', False)]}"/>
+                        </div>
                         <field name="phone_partner"/>
                         <field name="mail_partner"/>
-                        <field name="time"/>
                         <field name="parrainage"/>
                     </group>
                     <group>
-                        <field name="existing_power"/>
-                        <field name="rv_or_auto"/>
-                        <field name="crae" attrs="{'invisible': [('existing_power', '=', 0)]}"/>
-                        <field name="bta" attrs="{'invisible': [('existing_power', '=', 0)]}"/>
-                        <field name="msb" attrs="{'invisible': [('gestion_surplus', '!=', 'msb')]}"/>
+                        <group string="Informations techniques" colspan="4">
+                            <field name="existing_power"/>
+                            <field name="rv_or_auto"/>
+                            <field name="crae" attrs="{'invisible': [('existing_power', '=', 0)]}"/>
+                            <field name="bta" attrs="{'invisible': [('existing_power', '=', 0)]}"/>
+                            <field name="msb" attrs="{'invisible': [('gestion_surplus', '!=', 'msb')]}"/>
+                        </group>
+                        <group string="Validation" colspan="4">
+                            <field name="date_recepisse"/>
+                            <field name="abf"/>
+                            <field name="domofinance"/>
+                            <field name="dossier_complet"/>
+                        </group>
                     </group>
                 </group>
-                <group>
+                <group string="Pièces jointes">
                     <field name="devis_and_chq" widget="many2many_binary"/>
                     <field name="cgv" widget="many2many_binary"/>
                     <field name="taxes_foncieres" widget="many2many_binary"/>
@@ -140,46 +160,51 @@
                     <field name="mandat_mairie" widget="many2many_binary"/>
                     <field name="mandat_enedis" widget="many2many_binary"/>
                     <field name="mandat_OA" attrs="{'invisible': [('gestion_surplus', '!=', 'oa')]}" widget="many2many_binary"/>
-                    <field name="date_recepisse"/>
-                    <field name="abf"/>
-                    <field name="domofinance"/>
-                    <field name="dossier_complet"/>
                 </group>
             </xpath>
             <xpath expr="//notebook/page[@name='description']" position="after">
-                <page name="vt" string="Visite Technique">
+                <page name="vt" string="Visite Technique" default_focus="1">
                     <group>
-                        <field name="date_vt"/>
-                        <field name="tech_name"/>
-                        <field name="file_to_join" widget="many2many_binary"/>
-                        <field name="pic_to_join" widget="many2many_binary"/>
+                        <group string="Infos">
+                            <field name="date_vt"/>
+                            <field name="tech_id" widget="many2one_avatar_employee" />
+                        </group>
+                        <group string="Pièces jointes">
+                            <field name="file_to_join" widget="many2many_binary"/>
+                            <field name="pic_to_join" widget="many2many_binary"/>
+                        </group>
                     </group>
                 </page>
                 <page name="mairie" string="Mairie">
                     <group>
-                        <field name="done"/>
-                        <field name="sending_date_mairie"/>
-                        <field name="mairie_answer"/>
-                        <field name="mairie_answer_to_join" widget="many2many_binary"/>
-                        <field name="recepisse_to_join" widget="many2many_binary"/>
-                        <field name="abf_to_join" widget="many2many_binary"/>
-                        <field name="rsp_to_join" widget="many2many_binary"/>
+                        <group string="Informations">
+                            <field name="sending_date_mairie"/>
+                            <field name="mairie_answer"/>
+                            <separator colspan="2" string="Validation"/>
+                            <field name="done"/>
+                        </group>
+                        <group string="Pièces jointes">
+                            <field name="mairie_answer_to_join" widget="many2many_binary"/>
+                            <field name="recepisse_to_join" widget="many2many_binary"/>
+                            <field name="abf_to_join" widget="many2many_binary"/>
+                            <field name="rsp_to_join" widget="many2many_binary"/>
+                        </group>
                     </group>
                 </page>
                 <page name="pose" string="Pose">
                     <group>
-                        <group>
+                        <group string="Informations">
                             <field name="date_install"/>
+                            <field name="return_caution"/>
+                        </group>
+                        <group string="Pièces jointes">
                             <field name="aft" widget="many2many_binary"/>
                             <field name="picture"  widget="many2many_binary"/>
                             <field name="calepinage_emphase" widget="many2many_binary"/>
                             <field name="implantation_emphase" widget="many2many_binary"/>
-                        </group>
-                        <group>
                             <field name="quotation_alaska" widget="many2many_binary"/>
                             <field name="invoice_alaska" widget="many2many_binary"/>
                             <field name="invoice_finalRsp" widget="many2many_binary"/>
-                            <field name="return_caution"/>
                         </group>
                         <field name="all_file_is_good" invisible="1"/>
                     </group>
@@ -226,6 +251,7 @@
                                     <field name="enedis_done"/>
                                     <field name="numb_pdr"/>
                                     <field name="consuel_transmitted_enedis"/>
+                                    <separator string="Pièces jointes Enedis"/>
                                     <field name="synthese" widget="many2many_binary"/>
                                 </group>
                                 <group name="consuel" string="Consuel">
@@ -235,6 +261,7 @@
                                     <field name="intended_date"/>
                                     <field name="date_contre_visite"/>
                                     <field name="date_attestation"/>
+                                    <separator string="Pièces jointes Consuel"/>
                                     <field name="pdf_consuel" widget="many2many_binary"/>
                                     <field name="fileTech_and_schema" widget="many2many_binary"/>
                                 </group>

@@ -1,6 +1,13 @@
 from datetime import date
 
 from odoo import api, fields, models
+from odoo.tools import date_utils
+from odoo.tools.misc import xlsxwriter
+from odoo.modules.module import get_module_resource
+
+import io
+import json
+import base64
 
 class ResPartner(models.Model):
     _inherit = 'res.partner'
@@ -65,10 +72,10 @@ class ProjectProject(models.Model):
 
     @api.onchange('name_partner', 'birth_partner', 'address_partner', 'phone_partner', 'mail_partner', 'time', 'parrainage',
     'existing_power', 'rv_or_auto', 'crae', 'bta', 'msb', 'dossier_complet', 'gestion_surplus', 'amount_ht', 'date_signature',
-    'power_choose', 'commercial_name', 'techs_name')
+    'power_choose', 'user_id', 'tech_ids')
     def onchange_stage_id(self):
         for project in self:
-            if project.name_partner and project.birth_partner and project.street and project.city and project.zip and project.phone_partner and project.mail_partner and project.time and project.rv_or_auto and project.dossier_complet and project.gestion_surplus and project.amount_ht and project.date_signature and project.power_choose and project.commercial_name and project.techs_name and project.stage_id.id == 1:
+            if project.name_partner and project.birth_partner and project.street and project.city and project.zip and project.phone_partner and project.mail_partner and project.time and project.rv_or_auto and project.dossier_complet and project.gestion_surplus and project.amount_ht and project.date_signature and project.power_choose and project.user_id and project.tech_ids and project.stage_id.id == 1:
                 if project.gestion_surplus == 'msb' and project.existing_power and project.crae and project.bta and project.msb:
                     project.stage_id = self.env.ref('project.project_project_stage_1').id
                 elif project.gestion_surplus == 'msb' and not project.existing_power and project.msb:
@@ -100,20 +107,16 @@ class ProjectProject(models.Model):
         ('msb', 'MSB'),
         ('other', 'Autres')
     ], string="Gestion Surplus")
-    amount_ht = fields.Float("Montant HT", default="0")
-    amount_commission = fields.Float("Montant Commission")
+    currency_id = fields.Many2one('res.currency', related='company_id.currency_id')
+    amount_ht = fields.Monetary("Montant HT", group_operator="sum")
+    amount_commission = fields.Monetary("Montant Commission", group_operator="sum")
     date_signature = fields.Date("Date Signature Commande")
     power_choose = fields.Float("Puissance Choisie")
-    commercial_name = fields.Selection([
-        ('1', 'Harold'),
-        ('2', 'John'),
-        ('3', 'Axel'),
-        ('4', 'Mehdi')
-    ], string="Nom du Commercial")
     date_vt = fields.Datetime("Date et heure VT")
     date_mairie = fields.Date("Date accord mairie")
     date_install = fields.Date("Date d'installation")
-    techs_name = fields.Char("Nom des techs")
+    #techs_name = fields.Char("Nom des techs")
+    tech_ids = fields.Many2many('hr.employee', string="Techniciens")
     date_mise_service_enedis = fields.Date('Date de mise en service Enedis')
 
     @api.onchange('amount_ht')
@@ -122,15 +125,15 @@ class ProjectProject(models.Model):
             self.amount_commission = self.amount_ht * 0.1
 
 ## fichier et infos onglet VT
-    tech_name = fields.Char('Nom du Technicien')
+    tech_id = fields.Many2one('hr.employee', string='Technicien')
     file_to_join = fields.Many2many('ir.attachment', 'ir_attachment_file_join', string='Fichier à joindre')
     pic_to_join = fields.Many2many('ir.attachment', 'ir_attachment_pic_join', string='Photos à joindre')
 
-    @api.onchange('tech_name', 'file_to_join', 'pic_to_join', 'date_vt')
+    @api.onchange('tech_id', 'file_to_join', 'pic_to_join', 'date_vt')
     def _on_change_stage_id_vt(self):
         for project in self:
             if project.date_vt:
-                if project.file_to_join and project.pic_to_join and project.tech_name and project.stage_id.id == self.env.ref('project.project_project_stage_2').id:
+                if project.file_to_join and project.pic_to_join and project.tech_id and project.stage_id.id == self.env.ref('project.project_project_stage_2').id:
                     project.stage_id = self.env.ref('project.project_project_stage_3').id
                 else:
                     project.stage_id = self.env.ref('project.project_project_stage_2').id
@@ -165,6 +168,20 @@ class ProjectProject(models.Model):
                 project.stage_id = self.env.ref('project.project_project_stage_5').id
             else:
                 pass
+    def action_fsm_navigate(self):
+        if not self.partner_id.partner_latitude and not self.partner_id.partner_longitude:
+            self.partner_id.geo_localize()
+        url = "https://www.google.com/maps/dir/?api=1&destination=%s,%s" % (self.partner_id.partner_latitude, self.partner_id.partner_longitude)
+        return {
+            'type': 'ir.actions.act_url',
+            'url': url,
+            'target': 'new'
+        }
+
+    @api.depends('partner_id')
+    def _compute_has_complete_partner_address(self):
+        for project in self:
+            project.has_complete_partner_address = project.partner_id.city and project.partner_id.country_id
 
 ##Fichiers et infos onglet Pose
     return_caution = fields.Boolean('Retour chq Caution', default=False)
@@ -176,6 +193,7 @@ class ProjectProject(models.Model):
     invoice_alaska = fields.Many2many('ir.attachment', 'ir_attachment_inv_alaska', string='Facture alaska')
     invoice_finalRsp = fields.Many2many('ir.attachment', 'ir_attachment_inv_rsp', string='Facture final RSP client')
     all_file_is_good = fields.Boolean(default=False)
+    has_complete_partner_address = fields.Boolean(compute='_compute_has_complete_partner_address')
 
     @api.onchange('aft', 'picture', 'calepinage_emphase', 'implantation_emphase', 'quotation_alaska', 'invoice_alaska', 'invoice_finalRsp')
     def _onchange_all_file_good(self):
@@ -394,7 +412,47 @@ class ProjectProject(models.Model):
     nb_fdi_to_planif = fields.Integer('FDI à planifier', default=0)
     nb_fdi_finish = fields.Integer('FDI finies', default=0)
     nb_project_finish = fields.Integer('Dossiers clôturés', default=0)
+    xls_vt_file = fields.Binary(string="VT XLS")
+    xls_vt_filename = fields.Char()
 
+    # def excel_vt(self):
+    #     data = {}
+    #     return {'type': 'ir.actions.report', 'report_type': 'XLSX',
+    #             'data': {'model': 'project.project', 'output_format': 'XLSX',
+    #                      'options': json.dumps(data, default=date_utils.json_default),
+    #                      'report_name': 'Visite Technique %s %s' % (self.partner_id.name, self.name), }, }
+    # def test_xlsx_success(self):
+    #     xlsx_file_path = get_module_resource('adquat_rsp', 'static/excel', 'document_vt.xlsx')
+    #     file_content = open(xlsx_file_path, 'rb').read()
+    #     import_wizard = self.env['base_import.import'].create({
+    #         'res_model': 'base_import.tests.models.preview',
+    #         'file': file_content,
+    #         'file_type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    #     })
+    #
+    #     result = import_wizard.parse_preview({
+    #         'has_headers': True,
+    #     })
+    #     import pdb; pdb.set_trace()
+
+    def action_generate_xls(self):
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+        worksheet = workbook.add_worksheet('Exemption Details')
+        style_highlight = workbook.add_format({'bold': True, 'pattern': 1, 'bg_color': '#E0E0E0', 'align': 'center'})
+        style_normal = workbook.add_format({'align': 'center'})
+        row = 0
+        workbook.close()
+        xlsx_data = output.getvalue()
+        #self.xls_file = base64.encodebytes(xlsx_data)
+        document_vt = self.env['ir.attachment'].search([('name', '=', 'document_vt')],limit=1)
+
+        xlsxwriter.Workbook()
+        #ENREGISTRER EN PJ
+        if document_vt:
+            self.xls_vt_file = document_vt.datas
+
+        self.xls_vt_filename = 'Visite Technique %s %s.xlsx' % (self.partner_id.name, self.name)
 
 
 class Fdi(models.Model):

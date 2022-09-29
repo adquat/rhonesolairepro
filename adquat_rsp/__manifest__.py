@@ -3,10 +3,10 @@
     'name': "Adquat RSP",
 
     'summary': """
-        Personalisation diverse pour rsp""",
+        Personalisations diverses pour RSP""",
 
     'description': """
-        Personalisation diverse pour rsp
+        Personalisations diverses pour RSP
     """,
 
     'author': "Adquat",
@@ -19,7 +19,11 @@
     'version': '0.2',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'project'],
+    'depends': ['base',
+                'project',
+                'hr',
+                'report_xlsx',
+    ],
 
     # always loaded
     'data': [
@@ -28,6 +32,7 @@
         'views/fdi.xml',
         'views/sav.xml',
         'views/project.xml',
+        'report/report.xml',
     ],
     'license': 'LGPL-3',
     # only loaded in demonstration mode

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data>
+    <data noupdate="1">
        <record id="mail_auto_vt" model="mail.template">
            <field name="name">Mail confirmation rdv VT</field>
            <field name="model_id" ref="project.model_project_project"/>
