@@ -6,7 +6,7 @@
             <field name="name">document_vt</field>
             <field name="type">binary</field>
             <field name="description">Fichier EXCEL vierge pour Visite Technique</field>
-            <field name="datas" type="base64" file="adquat_rsp/static/excel/document_vt.xlsx"/>
+            <field name="datas" type="base64" file="adquat_rsp/report/document_vt.xlsx"/>
             <field name="mimetype">application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</field>
         </record>
     </data>
