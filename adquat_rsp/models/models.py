@@ -15,7 +15,12 @@ class ResPartner(models.Model):
     date_birth_partner = fields.Date('Date de Naissance')
 
 class ProjectProject(models.Model):
-    _inherit = 'project.project'
+    _name = 'project.project'
+    _inherit = ['mail.thread.phone', 'project.project']
+    def _phone_get_number_fields(self):
+        """ This method returns the fields to use to find the number to use to
+        send an SMS on a record. """
+        return ['phone_partner']
 
 ## Infos client: Onglet fiche client
     name_partner = fields.Char(string="Nom Client", related='partner_id.name')
