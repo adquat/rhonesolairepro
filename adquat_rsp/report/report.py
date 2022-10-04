@@ -31,7 +31,7 @@ class ProjectXlsx(models.AbstractModel):
         else:
             ws.cell(6,3).value = projects.name_partner
 
-        ws.cell(7,3).value = (projects.street or '') + '/n' + (projects.street2 or '')
+        ws.cell(7,3).value = (projects.street or '') + '\n' + (projects.street2 or '')
         ws.cell(7,6).value = projects.birth_partner
         ws.cell(8,3).value = projects.phone_partner
         ws.cell(8,6).value = projects.mail_partner
