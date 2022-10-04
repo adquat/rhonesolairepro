@@ -25,7 +25,7 @@ class ProjectXlsx(models.AbstractModel):
         if projects.tech_id:
             ws.cell(3,6).value = projects.tech_id.name
 
-        if projects.name_partner.split(' ') > 1:
+        if len(projects.name_partner.split(' ')) > 1:
             ws.cell(6,3).value = projects.name_partner.split(' ')[1]
             ws.cell(6,6).value = projects.name_partner.split(' ')[0]
         else:
