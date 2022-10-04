@@ -34,7 +34,7 @@
                     Bonjour <t t-out="object.partner_id.name"/>,
                     <br/><br/>
                     Je vous confirme que votre installation solaire aura lieu sur 1 et/ou 2 jours le et/ou les:<br/>
-                    <t t-out="object.date_install.strftime('%d/%m/%Y')" style="text-align: center;"/>
+                    <t t-if="object.date_install" t-out="object.date_install.strftime('%d/%m/%Y')" style="text-align: center;"/>
                     <br/><br/>
                     Les techniciens arriveront entre 08 et 09 h, ils vous contacteront avant d'arriver.
                     <br/><br/>

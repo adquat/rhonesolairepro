@@ -23,6 +23,7 @@
                 'project',
                 'hr',
                 'report_xlsx',
+                'base_geolocalize',
     ],
 
     # always loaded
