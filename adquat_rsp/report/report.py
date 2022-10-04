@@ -17,7 +17,6 @@ class ProjectXlsx(models.AbstractModel):
 
     def generate_xlsx_report(self, workbook, data, projects):
         projects.ensure_one()
-        import pdb; pdb.set_trace()
         user_date_format = self.env['res.lang']._lang_get(self.env.user.lang).date_format
         ws = workbook.active
 
