@@ -134,7 +134,7 @@
                                 icon="fa-arrow-right" string="Calcul itinéraire avec Google" colspan="2"
                                 attrs="{'invisible': [('has_complete_partner_address', '=', False)]}"/>
                         </div>
-                        <field name="phone_partner"/>
+                        <field name="phone_partner" widget="phone"/>
                         <field name="mail_partner"/>
                         <field name="parrainage"/>
                     </group>
