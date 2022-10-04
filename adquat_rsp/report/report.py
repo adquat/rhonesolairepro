@@ -30,8 +30,8 @@ class ProjectXlsx(models.AbstractModel):
             ws.cell(6,6).value = projects.name_partner.split(' ')[0]
         else:
             ws.cell(6,3).value = projects.name_partner
-        #SAUT DE LIGNE
-        ws.cell(7,3).value = (projects.street or '') + '\n' + (projects.street2 or '')
+
+        ws.cell(7,3).value = (projects.street or '') + (projects.street2 and '\n' + projects.street2 or '')
         ws.cell(7,6).value = projects.birth_partner
         ws.cell(8,3).value = projects.phone_partner
         ws.cell(8,6).value = projects.mail_partner
