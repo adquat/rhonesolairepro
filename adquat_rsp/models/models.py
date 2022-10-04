@@ -126,7 +126,7 @@ class ProjectProject(models.Model):
 
 ## fichier et infos onglet VT
     tech_id = fields.Many2one('hr.employee', string='Technicien')
-    file_to_join = fields.Many2many('ir.attachment', 'ir_attachment_file_join', string='Fichier à joindre')
+    file_to_join = fields.Many2many('ir.attachment', 'ir_attachment_file_join', string='Fichiers à joindre')
     pic_to_join = fields.Many2many('ir.attachment', 'ir_attachment_pic_join', string='Photos à joindre')
 
     @api.onchange('tech_id', 'file_to_join', 'pic_to_join', 'date_vt')
@@ -149,6 +149,7 @@ class ProjectProject(models.Model):
     ], string="Réponse mairie")
     mairie_answer_to_join = fields.Many2many('ir.attachment', 'ir_attachment_mairie_answer', string='Accord/Refus à importer')
     recepisse_to_join = fields.Many2many('ir.attachment', 'ir_attachment_recepisse', string='Récépissé fichier')
+    other_attachments_to_join = fields.Many2many('ir.attachment', 'ir_attachment_other', string='Pièces complémentaires')
     abf_to_join = fields.Many2many('ir.attachment', 'ir_attachment_abf', string='ABF')
     rsp_to_join = fields.Many2many('ir.attachment', 'ir_attachment_rsp', string='Décharge RSP')
 

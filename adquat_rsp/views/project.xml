@@ -188,6 +188,7 @@
                         <group string="Pièces jointes">
                             <field name="mairie_answer_to_join" widget="many2many_binary"/>
                             <field name="recepisse_to_join" widget="many2many_binary"/>
+                            <field name="other_attachments_to_join" widget="many2many_binary"/>
                             <field name="abf_to_join" widget="many2many_binary"/>
                             <field name="rsp_to_join" widget="many2many_binary"/>
                         </group>
