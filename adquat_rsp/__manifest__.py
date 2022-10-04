@@ -24,6 +24,7 @@
                 'hr',
                 'report_xlsx',
                 'base_geolocalize',
+                'sms',
     ],
 
     # always loaded
